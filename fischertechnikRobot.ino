@@ -3,6 +3,8 @@
 #include "Motor.h"
 
 Motor Mot1;
+Motor Mot2;
+Motor Mot3;
 
 void setup() { 
 	pinMode(LED_BUILTIN, OUTPUT);
@@ -13,95 +15,104 @@ void setup() {
 
 	ftduino.init();
 
-	ftduino.input_set_mode(Ftduino::I1, Ftduino::SWITCH);
-	ftduino.input_set_mode(Ftduino::I2, Ftduino::SWITCH);
-	ftduino.input_set_mode(Ftduino::I3, Ftduino::SWITCH);
-
-	Mot1.init(Ftduino::M1);
-
-	ftduino.counter_set_mode(C1, Ftduino::C_EDGE_RISING);
-	ftduino.counter_set_mode(C2, Ftduino::C_EDGE_RISING);
-	ftduino.counter_set_mode(C3, Ftduino::C_EDGE_RISING);
+	Mot1.init(Ftduino::M1, Ftduino::C1, Ftduino::I1, 5.3333333f, false);
+	Mot2.init(Ftduino::M2, Ftduino::C2, Ftduino::I2, 8.2555555f, false);
+	Mot3.init(Ftduino::M3, Ftduino::C3, Ftduino::I3, 7.1888888f, false);
 }
 
 uint8_t switch2state = 0;
 uint8_t switch2stateBefore = 0;
-uint8_t m1StepPos = 0;
-
-int Mot1running;
 
 void loop() {
 	unsigned long currentMillis = millis();
 
-	if(Mot1running){
-		if(ftduino.input_get(Ftduino::I1)) {
-			digitalWrite(LED_BUILTIN, HIGH);
-			ftduino.motor_set(Ftduino::M1, Ftduino::BRAKE, Ftduino::MAX);
-			Mot1running = 0;
-			Serial.print("M1 limit switch! at steps: ");
-			Serial.println(ftduino.counter_get(Ftduino::C1));
-		}
-
-		if (currentMillis - Mot1running >= 500) {
-			Mot1running = 0;
-
-			ftduino.motor_set(Ftduino::M1, Ftduino::BRAKE, Ftduino::MAX);
-
-			Serial.print("Interval over, M1: steps: ");
-			Serial.println(ftduino.counter_get(Ftduino::C1));
-		}
-	}
-
-	if(ftduino.input_get(Ftduino::I2)) {
-		digitalWrite(LED_BUILTIN, HIGH);
-		ftduino.motor_set(Ftduino::M2, Ftduino::BRAKE, Ftduino::MAX);
-	}
-	if(ftduino.input_get(Ftduino::I3)) {
-		digitalWrite(LED_BUILTIN, HIGH);
-		ftduino.motor_set(Ftduino::M3, Ftduino::BRAKE, Ftduino::MAX);
-	}
+	Mot1.update();
+	Mot2.update();
+	Mot3.update();
 
 /*
     switch2state = ftduino.input_get(Ftduino::I2);
     if (switch2state == 1 && switch2stateBefore == 0) { // and it's currently pressed:
+      Serial.println("switch2");
       delay(50);
     }
     if (switch2state == 0 && switch2stateBefore == 1) { // and it's currently released:
+       Serial.println("switch2 released");
        delay(50);
     }
     switch2stateBefore = switch2state;
 */
 
 	if (Serial.available() > 0) {  // Check if there are any incoming bytes
-		char incomingChar = Serial.read();
+		char incomingChar = Serial.read();  // Read the incoming byte
 
 		if (incomingChar == 'a') {
 			Serial.println("M1 left");
-		//	ftduino.motor_counter(Ftduino::M1, Ftduino::LEFT, Ftduino::MAX/2, 30);
-			Mot1running = millis();
+			Mot1.set(Ftduino::LEFT, Ftduino::MAX/2, 30);
 
 		} else if (incomingChar == 's') {
 			Serial.println("M1 right");
-		//	ftduino.motor_counter(Ftduino::M1, Ftduino::RIGHT, Ftduino::MAX/2, 30);
-			Mot1running = millis();
+			Mot1.set(Ftduino::RIGHT, Ftduino::MAX/2, 30);
 
-		} else if (incomingChar == 'y') {
-			Serial.println("M1 left");
-		//	ftduino.motor_set(Ftduino::M1, Ftduino::LEFT, Ftduino::MAX/3);
-			Mot1running = millis();
+		} else if (incomingChar == 'd') {
+			Serial.println("M2 left");
+			Mot2.set(Ftduino::LEFT, Ftduino::MAX, 40);
 
-		} else if (incomingChar == 'x') {
-			Serial.println("M1 left");
-		//	ftduino.motor_set(Ftduino::M1, Ftduino::RIGHT, Ftduino::MAX/3);
-			Mot1running = millis();
+		} else if (incomingChar == 'f') {
+			Serial.println("M2 right");
+			Mot2.set(Ftduino::RIGHT, Ftduino::MAX, 40);
 
-		} else if (incomingChar == 'v') {
-			Mot1running = millis();
+		} else if (incomingChar == 'g') {
+			Serial.println("M3 left");
+			Mot3.set(Ftduino::LEFT, Ftduino::MAX/2, 30);
+
+		} else if (incomingChar == 'h') {
+			Serial.println("M3 right");
+			Mot3.set(Ftduino::RIGHT, Ftduino::MAX/2, 30);
+
+		} else if (incomingChar == 'b') {
+			Mot1.setDeg(3, Ftduino::MAX/2);
+			Mot2.setDeg(3, Ftduino::MAX);
+			Mot3.setDeg(3, Ftduino::MAX);
+
+		} else if (incomingChar == 'n') {
+			Mot1.setDeg(45, Ftduino::MAX/2);
+			Mot2.setDeg(45, Ftduino::MAX);
+			Mot3.setDeg(45, Ftduino::MAX);
+
+		} else if (incomingChar == 'm') {
+			Mot1.setDeg(90, Ftduino::MAX/2);
+			Mot2.setDeg(60, Ftduino::MAX);
+			Mot3.setDeg(90, Ftduino::MAX);
+
+		} else if (incomingChar == '1') {
+			Serial.println("M1 homing");
+			Mot1.moveHome();
+		} else if (incomingChar == '2') {
+			Serial.println("M2 homing");
+			Mot2.moveHome();
+		} else if (incomingChar == '3') {
+			Serial.println("M3 homing");
+			Mot3.moveHome();
+		} else if (incomingChar == '4') {
+			Serial.println("Homing axes 1-3");
+			Mot1.moveHome();
+			Mot2.moveHome();
+			Mot3.moveHome();
+		} else if (incomingChar == '5') {
+			Mot1.report();
+			Mot2.report();
+			Mot3.report();
+
+		} else if (incomingChar == '<') {
+			Serial.println("EMERGENCY OFF");
+			ftduino.motor_set(Ftduino::M1, Ftduino::OFF, Ftduino::MAX);
+			ftduino.motor_set(Ftduino::M2, Ftduino::OFF, Ftduino::MAX);
+			ftduino.motor_set(Ftduino::M3, Ftduino::OFF, Ftduino::MAX);
 		}
 	}
 
 
     digitalWrite(LED_BUILTIN, LOW);
- 
 }
 
