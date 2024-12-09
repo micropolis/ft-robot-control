@@ -175,6 +175,34 @@ int Motor::speedFromDeltaRamped(int pulsesToGo, int pulsesCounted) {
 	return rampedSpeed;
 }
 
+// Unused:
+// Returns a velocity value based on the delta between how many pulses we need to go and how many we have already travelled (pulses counted)
+// This provides the basis for a basic "trapezoidal motion profile, divided into three phases: acceleration, cruise and deceleration phase.
+int Motor::velocityFromDeltaRamped(int pulsesToGo, int pulsesCounted) {
+	int pulsesRemaining = pulsesToGo - pulsesCounted;
+	int rampedVelocity;
+
+	int minBandingArea = 5;
+	int maxBandingArea = 25;
+	int bandingArea = constrain((pulsesToGo * maxBandingArea) / 100, minBandingArea, maxBandingArea); 
+
+	_cruising = false;
+	if(pulsesCounted < bandingArea){ // ramp up, acceleration phase
+		rampedVelocity = map(pulsesCounted, 0, bandingArea, _minVelocity, _setVelocity);
+	}else if (pulsesRemaining < bandingArea) { // ramp down, deceleration phase
+		rampedVelocity = map(pulsesRemaining, 0, bandingArea, _minVelocity, _setVelocity);
+	}else{
+		// cruise phase
+		rampedVelocity = _setVelocity;
+		_cruising = true;
+	}
+
+	if(rampedVelocity < _minVelocity){
+		return _minVelocity;
+	}
+	return rampedVelocity;
+}
+
 
 // a PID controller provides a continuous adjustment of motor speed based on the error between the desired and current positions, which, when tuned well,
 // provides more accurate positioning and smoother motion compared to a ramping approach as it is more aware of the distance that needs to be travelled
@@ -218,6 +246,53 @@ int Motor::speedFromPosPID(int targetPosition, int currentPosition) {
 	return speed;
 }
 
+// Unused:
+// Velocity PID controller (outer loop)
+float Motor::velocityFromPosPID(int targetPosition, int currentPosition) {
+	int error = targetPosition - currentPosition;
+
+	// limit integral (anti-windup)
+	float maxIntegral = 100.0;
+	float minIntegral = 0.0;
+	integral_pos += error;
+	if (integral_pos > maxIntegral){
+		integral_pos = maxIntegral;
+	} else if (integral_pos < minIntegral){
+		 integral_pos = minIntegral;
+	}
+
+	int derivative = (error - previousError_pos) / deltaTime;
+	previousError_pos = error;
+
+	float output = (Kp_pos * error)  +  (Ki_pos * integral_pos)  +  (Kd_pos * derivative);
+
+	// Ensure velocity is within bounds
+	output = constrain(output, _minVelocity, _maxVelocity);
+
+	return output; // This is the desired velocity
+}
+
+// Unused:
+// Motor Speed PID controller (inner loop)
+int Motor::speedFromVelocityPID(float desiredVelocity, float currentVelocity) {
+	float error = desiredVelocity - currentVelocity; // P
+
+	integral_vel += error; // I
+
+	// D
+	float derivative = 0;
+	if (deltaTime > 0) {  // Avoid division by zero
+		float derivative = Kd * (error - lastError) / deltaTime;
+	}
+
+	float output = Kp_vel * error + Ki_vel * integral_vel + Kd_vel * derivative;
+	previousError_vel = error;
+
+	// Clamp the motor speed to within maxMotorSpeed
+	output = constrain(output, _minSpeed, _maxSpeed);
+
+	return output; // This is the motor speed
+}
 
 // get a proportionally adjusted speed based on velocity error
 int Motor::speedFromVelocityProp(int speed, float currentVelocity, float desiredVelocity) {

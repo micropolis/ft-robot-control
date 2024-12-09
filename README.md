@@ -35,7 +35,7 @@ Returns `_minSpeed`
 
 #### void setMotionProfile(int motionProfile)
 
-The library is able to drive our motor according to several "[Motion Profile](https://www.micropolis.com/support/kb/micropolis-robotics-primer#Motion-Profile
+The library is able to drive our motor according to several "[Motion Profiles](https://www.micropolis.com/support/kb/micropolis-robotics-primer#Motion-Profile
 )". Check the if/else switch in `update()` to see which integer maps to which motion profile. Currently, we support raw on/off, a simple ramping algorithm, [PID controller](https://www.micropolis.com/support/kb/micropolis-robotics-primer#PID-Control)-style acceleration/deceleration, and a mode combining ramped with speed-controlled cruise phases.
 
 #### int getMotionProfile()
@@ -68,7 +68,7 @@ Joints on the fischertechnik robot do not use absolute positioning but "incremen
 
 Returns a speed integer ranging from `_minSpeed` to `_maxSpeed` that is based on the relative distance between current position and target position as calculated by a simple PID algorithm.
 
-A [PID controller](https://www.micropolis.com/support/kb/micropolis-robotics-primer#PID-Control) continuously adjusts motor speed based on the error between the desired and current positions. When well-tuned, it provides more accurate positioning and smoother motion compared to a ramping approach, as it better accounts for the distance that needs to be traveled.
+A [PID controller](https://www.micropolis.com/support/kb/micropolis-robotics-primer#PID-Control) continuously adjusts motor speed based on the error between the desired and current positions. When well-tuned, it provides more accurate positioning and smoother motion compared to a ramping approach, as it better accounts for the distance that needs to be traveled. But note that a PID controller usually produces a semiparabola-type motion profile, with a minimal acceleration slope, reaching maximum speed almost instantly. When the error is large, the PID typically makes a significant adjustment unless it is deliberately dampened. However, damping the adjustment somewhat contradicts the principle of tuning for dynamic error rectification, and as such might be incompatible with a standard PID implementation.
 
 #### int speedFromVelocityProp(int speed, float currentVelocity, float desiredVelocity)
 
@@ -99,6 +99,17 @@ Simple debug method that prints a "motor report" to serial out. Tells us if a mo
 #### void moveHome()
 
 Method to trigger the "[homing motion](https://www.micropolis.com/support/kb/micropolis-robotics-primer#Homing-routine)" of our robot that "calibrates" the set axis (read that as "...drives the axis towards its limit switch"). Note that the robot will perform this motion at a hard-coded speed, which might be too slow if a joint is under load. And also note that this method *blocks* while it is running.
+
+
+#### int velocityFromDeltaRamped(int pulsesToGo, int pulsesCounted)
+Abandoned. Returns a velocity value based on the delta between how many pulses we need to go and how many we have already travelled (pulses counted). This provides the basis for a basic "trapezoidal motion profile, divided into three phases: acceleration, cruise and deceleration phase.
+
+#### float velocityFromPosPID(int targetPosition, int currentPosition)
+Abandoned. Velocity PID controller, the "outer loop" of a cascaded control system for our robot's motion. The "outer loop" PID controller determines the velocity required based on how far we need to travel to the target.
+
+#### int speedFromVelocityPID(float desiredVelocity, float currentVelocity)
+Abandoned. Motor Speed PID controller, the "inner loop" of a cascaded control system for our robot's motion. The "inner loop" PID controller calculates the actual motor speed to reach and maintain the desired velocity target.
+
 
 ## RELATED READING
 
