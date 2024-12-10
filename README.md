@@ -1,6 +1,8 @@
 # ft-robot-control
 Framework to control Fischertechnik's 6-Axis-Robot
 
+![ft-robot](ft-robot-control.webp)
+
 ## DESCRIPTION
 
 With its top-line computer controller TXT 4.0, ${\textsf{\color{red}fischer\color{blue}technik}}$® recently added an updated signature model to their long history of *Training Robot* kits. The new version is a 6-axis articulated arm, driven by DC motors, RC servos and pneumatics. This repository contains a Class with a number of helper methods to control fischertechnik encoder motors connected to an [ftDuino](https://github.com/harbaum/ftduino/).
@@ -50,17 +52,13 @@ Returns whether our motor has completed calibration or not. Returns `_calibrated
 
 The internal variable `_running` is populated with a `millis()` timestamp when our motor is activated. It is used as a flag in the `update()` method. This getter returns this variable.
 
-#### void set(int direction, int speed)
+#### void set(int direction, int speed, int pulsesToGo, int velocity) {
 
-For raw drive control of the set motor, we use a wrapper around `ftduino.motor_set()`. This wrapper passes the set `motorId` along with the provided `direction` and `speed`. Additionally, it sets some of our internal variables. Therefore, use this wrapper instead of `ftduino.motor_set()` to directly drive a motor.
+For raw control of the motor we use a wrapper around `ftduino.motor_set()`. This wrapper passes the set `motorId` along with the provided `direction` and `speed`, `pulsesToGo` and `velocity`. Velocity values may not be used depending on set motionProfile. Additionally, the method sets some of our internal variables. Therefore, use this wrapper instead of `ftduino.motor_set()` to directly drive a motor.
 
-#### void set(int direction, int speed, int togo)
+#### void setDeg(int absDegrees, int speed, int velocity)
 
-Overloaded version of set(), expecting an additional variable `togo` for the number of pulses the motor should turn.
-
-#### void setDeg(int absDegrees, int speed)
-
-Higher-level way to drive an axis motor. It expects `absDegrees` and `speed`, and will drive a motor from the current position to the provided angular degrees at the provided speed. For this to work, the axis has to be "calibrated" by executing the "homing motion", which is implemented in `moveHome()`.
+Higher-level way to drive an axis motor. It expects `absDegrees` and `speed`, and will drive a motor from the current position to the provided angular degrees at the provided speed. For this to work, the axis has to be "calibrated" by executing the "homing motion", which is implemented in `moveHome()`. Also expects a third value for `velocity`, which may or may not be used. 
 
 Joints on the fischertechnik robot do not use absolute positioning but "incremental positioning" (or "closed-loop control with limit switches"). To determine the axis's angular position, we use a limit switch at one end of the rotation to establish a known reference position. From there, we can determine positions by counting pulses from a rotary encoder and knowing how far the joint travels per pulse.
 
