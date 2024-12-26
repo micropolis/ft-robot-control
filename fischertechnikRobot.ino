@@ -19,11 +19,20 @@ void setup() {
 	ftduino.init();
 
 	Mot1.init(Ftduino::M1, Ftduino::C1, Ftduino::I1, 5.2f, false);
-	Mot2.init(Ftduino::M2, Ftduino::C2, Ftduino::I2, 6.8888888f, false); Mot2.setMinSpeed(27);
-	Mot3.init(Ftduino::M3, Ftduino::C3, Ftduino::I3, 6.8888888f, false); Mot3.setMinSpeed(20);
-	Mot1.setMotionProfile(0);
-	Mot2.setMotionProfile(0);
-	Mot3.setMotionProfile(0);
+	Mot2.init(Ftduino::M2, Ftduino::C2, Ftduino::I2, 6.8888888f, false);
+	Mot3.init(Ftduino::M3, Ftduino::C3, Ftduino::I3, 6.8888888f, false);
+
+	// default minSpeed for Mot1 is ok
+	Mot2.setMinSpeed(27);
+	Mot3.setMinSpeed(20);
+
+	Mot1.setMotionProfile(1);
+	Mot2.setMotionProfile(1);
+	Mot3.setMotionProfile(1);
+
+	Mot1.setLimit(1760); // 340deg
+	Mot2.setLimit(872);	// 130deg
+	Mot3.setLimit(1122); // 165deg
 }
 
 uint8_t switch2state = 0;

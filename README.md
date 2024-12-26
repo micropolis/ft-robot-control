@@ -14,7 +14,7 @@ This library was primarily written for the aforementioned 6-Axis robot and the m
 ### Methods
 
 #### void init(int motorId, int counterId, int switchId, float pulsesPerDegreeRotation, bool reversed);
-Call the init function to adjust the motor methods to individual axis setup. 
+Call the init function to adjust the motor methods to individual axis setups. 
 
   * `motorId` expects an ftDuino identifier, like `Ftduino::M1`.
   * `counterId` expects the corresponding counter input from the rotary encoder, like `Ftduino::C1`.

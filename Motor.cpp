@@ -57,6 +57,10 @@ int Motor::getMinSpeed() {
 	return _minSpeed;
 }
 
+void Motor::setLimit(int maxAbsPulses) {
+	_maxAbsPulses = maxAbsPulses;
+}
+
 void Motor::setMotionProfile(int motionProfile) {
 	_motionProfile = motionProfile;
 }
@@ -114,13 +118,21 @@ void Motor::setDeg(int absDegrees, int speed, int velocity) {
 		Serial.print("M"); Serial.print(_motorId + 1);
 		Serial.print(" Warning: ");
 		Serial.print(absDegrees);
-		Serial.print(" outside of reach due to _calibrationPulsesLost. Setting 0 pulses to go.");
-		pulsesToGo = 0;
+		Serial.print(" outside of reach due to _calibrationPulsesLost. Veto.");
+		return false;
 	}
 
 	int roundedToGo = (int)(pulsesToGo + 0.5);
 
-	// Start motor into the right direction at min speed and hand handing motor control over to update()
+	if(roundedToGo + _absPulses > _maxAbsPulses){
+		Serial.print("M"); Serial.print(_motorId + 1);
+		Serial.print(" Warning: ");
+		Serial.print(absDegrees);
+		Serial.print(" outside of reach due to _maxAbsPulses. Veto.");
+		return false;
+	}
+
+	// Start motor into the right direction at min speed and hand motor control over to update()
 	int deltaPulses = 0;
 	if(roundedToGo > _absPulses){
 		deltaPulses = roundedToGo - _absPulses;

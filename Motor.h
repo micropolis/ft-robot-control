@@ -10,6 +10,7 @@ class Motor {
 	int getId();
 	void setMinSpeed(int minSpeed);
 	int  getMinSpeed();
+	void setLimit(int maxAbsPulses);
 	void setMotionProfile(int motionProfile);
 	int  getMotionProfile();
 	void set(int direction, int speed, int pulsesToGo, int velocity = 0);
@@ -45,7 +46,8 @@ class Motor {
 	int _timeBudget = 0;
 	bool _calibrated = false;
 	int _calibrationPulsesLost = 0;	// due to how we trigger the switch, this number of pulses towards zero are not reachable
-	int _absPulses = 0;			
+	int _absPulses = 0;			// current absolute position of axis in pulses
+	int _maxAbsPulses = 0;		// limit of rotation in absolute pulses
 	bool _reversed = false;
 	bool _cruising = false;
 
@@ -94,3 +96,4 @@ class Motor {
 	int lastPosition = 0;		// PID+V
 };
 
+#endif
